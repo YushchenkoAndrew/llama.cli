@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/YushchenkoAndrew/llama-cli/src/lib"
@@ -22,13 +24,30 @@ func list(sources []string) {
 				status = "---"
 			}
 
-			fmt.Printf("%-46s %-9s %-9s %-9s %s\n", m.ID, status, lib.GetSize(m.Meta), strings.Join(m.Architecture.OutputModalities, "+"), strings.Join(m.Architecture.InputModalities, "+"))
+			fmt.Printf("%-46s %-9s %-9s %-9s %s\n", m.ID, status, models.GetSize(&m), strings.Join(m.Architecture.OutputModalities, "+"), strings.Join(m.Architecture.InputModalities, "+"))
 		}
 	}
 }
 
 func ps() {
-	fmt.Printf("%-46s %-9s %s\n", "NAME", "STATUS", "SIZE")
+	cmd := exec.Command("nvidia-smi", "--query-gpu=memory.total,memory.used", "--format=csv,noheader,nounits")
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	stats := strings.Split(strings.TrimSpace(out.String()), ",")
+	if len(stats) != 2 {
+		panic("nvidia-smi returns invalid data")
+	}
+
+	total, _ := strconv.Atoi(strings.TrimSpace(stats[0]))
+	used, _ := strconv.Atoi(strings.TrimSpace(stats[1]))
+
+	fmt.Printf("%-46s %-9s %-9s %s\n", "NAME", "STATUS", "SIZE", "USAGE")
 	for _, m := range models.Active() {
 		status := m.Status.Value
 		props := models.Props(m.ID)
@@ -37,7 +56,7 @@ func ps() {
 			status = "sleeping"
 		}
 
-		fmt.Printf("%-46s %-9s %s\n", m.ID, status, lib.GetSize(m.Meta))
+		fmt.Printf("%-46s %-9s %-9s %s\n", m.ID, status, models.GetSize(m), lib.PrettifySize(uint64(used*1024*1024))+"/"+lib.PrettifySize(uint64(total*1024*1024)))
 	}
 }
 

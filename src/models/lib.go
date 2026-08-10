@@ -3,6 +3,7 @@ package models
 import (
 	"strings"
 
+	"github.com/YushchenkoAndrew/llama-cli/src/lib"
 	"github.com/YushchenkoAndrew/llama-cli/src/types"
 )
 
@@ -17,6 +18,14 @@ func Active() []*types.Model {
 	}
 
 	return active
+}
+
+func GetSize(model *types.Model) string {
+	if model.Meta != nil {
+		return lib.PrettifySize(uint64(model.Meta.Size))
+	}
+
+	return "-"
 }
 
 func Cached(model string) *types.Model {

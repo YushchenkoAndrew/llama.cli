@@ -2,26 +2,25 @@ package lib
 
 import (
 	"fmt"
-
-	"github.com/YushchenkoAndrew/llama-cli/src/types"
 )
 
-func GetSize(m *types.ModelMeta) string {
-	if m == nil {
-		return "-"
+func PrettifySize(bytes uint64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%dB", bytes)
 	}
 
-	if float64(m.Size) >= 1e9 {
-		return fmt.Sprintf("%.1fG", float64(m.Size)/1e9)
+	// Calculate the correct suffix index
+	// 1 = K, 2 = M, 3 = G, 4 = T, etc.
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
 	}
 
-	if float64(m.Size) >= 1e6 {
-		return fmt.Sprintf("%.1fM", float64(m.Size)/1e6)
-	}
+	suffixes := []string{"K", "M", "G", "T", "P", "E"}
+	value := float64(bytes) / float64(div)
 
-	if float64(m.Size) >= 1e3 {
-		return fmt.Sprintf("%.1fk", float64(m.Size)/1e3)
-	}
-
-	return fmt.Sprintf("%d", m.Size)
+	// Formats to 1 decimal place. Use "%.0f" if you prefer no decimals for whole numbers.
+	return fmt.Sprintf("%.1f%s", value, suffixes[exp])
 }
