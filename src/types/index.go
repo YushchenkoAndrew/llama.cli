@@ -28,7 +28,7 @@ type Model struct {
 }
 
 type ModelMeta struct {
-	VocabType int    `json:"vocab_type"`
+	// VocabType int    `json:"vocab_type"`
 	NVocab    int    `json:"n_vocab"`
 	NCtx      int    `json:"n_ctx"`
 	NCtxTrain int    `json:"n_ctx_train"`
